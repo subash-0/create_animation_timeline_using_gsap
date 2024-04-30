@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { GLTFLoader, SkeletonUtils } from 'three/examples/jsm/Addons.js';
+import { GLTFLoader, SkeletonUtils,OrbitControls } from 'three/examples/jsm/Addons.js';
 import gsap from 'gsap';
     const renderer = new THREE.WebGLRenderer({antialias:true});
     document.body.appendChild(renderer.domElement);
@@ -15,7 +15,8 @@ const camera = new THREE.PerspectiveCamera(
 );
 camera.position.set(10,0,20);
 const scene = new THREE.Scene();
-
+// const orbit = new OrbitControls(camera, renderer.domElement)
+// orbit.update();
 const ambientLight = new THREE.AmbientLight(0xffffff,2);
 const directionLight = new THREE.DirectionalLight(0xffffff,3);
 scene.add(directionLight)
@@ -29,9 +30,27 @@ scene.add(ambientLight)
 // scene.add(gridHelper)
 
 const phoenixLoader = new GLTFLoader();
+const dovLoader = new GLTFLoader();
 let mixer1;
 let mixer2;
 let mixer3;
+let mixer4;
+dovLoader.load("./assests/dove_bird_rigged/scene.gltf",(gltf)=>{
+    const model = gltf.scene;
+    scene.add(model);
+    model.scale.set(0.5,0.5,0.5);
+    model.position.set(-15,-90,0);
+    model.rotation.y = Math.PI/2
+    mixer4 = new THREE.AnimationMixer(model);
+    const  clips = gltf.animations;
+    const clip = THREE.AnimationClip.findByName(clips,"Take 001");
+    const action = mixer4.clipAction(clip);
+    action.play();
+    action.startAt(0.40);
+    window.addEventListener( "mouseover" , cameraAnimation);
+
+});
+
 phoenixLoader.load("./assests/phoenix_bird/scene.gltf",(gltf)=>{
     const model = gltf.scene;
     model.scale.set(0.008,0.008,0.008);
@@ -40,14 +59,13 @@ phoenixLoader.load("./assests/phoenix_bird/scene.gltf",(gltf)=>{
     scene.add(model)
     scene.add(model22)
     scene.add(model32);
-
     model22.position.set(5,-4,3);
     model32.position.set(-5, 4,-2);
     mixer1 = new THREE.AnimationMixer(model);
     mixer2 = new THREE.AnimationMixer(model22);
     mixer3 = new THREE.AnimationMixer(model32);
     const clips = gltf.animations;
-    console.log(clips)
+
     const clip = THREE.AnimationClip.findByName(clips,"Take 001");
 
     const action1 = mixer1.clipAction(clip);
@@ -167,10 +185,12 @@ const cameraAnimation=()=>{
 const clock = new THREE.Clock();
 function animate(){
     const delta = clock.getDelta();
-    if(mixer1 && mixer2 && mixer3){
+    if(mixer1 && mixer2 && mixer3 && mixer4){
         mixer1.update(delta);
         mixer2.update(delta);
         mixer3.update(delta);
+        mixer4.update(delta);
+        
         
     }
    renderer.render(scene,camera);
